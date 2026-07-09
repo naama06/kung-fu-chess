@@ -100,3 +100,5 @@ def solve(lines=None):
                     selected = None               # איפוס הבחירה
 
     return "\n".join(output)
+if __name__ == "__main__":
+    print(solve())
