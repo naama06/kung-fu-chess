@@ -9,3 +9,4 @@ class Board:
 
     def get_piece(self, pos):
         return self._pieces.get(pos)
+    

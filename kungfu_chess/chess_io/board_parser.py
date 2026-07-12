@@ -1,5 +1,6 @@
 from model.board import Board
 from model.position import Position
+from model.piece import Piece
 
 class BoardParser:
    @staticmethod
