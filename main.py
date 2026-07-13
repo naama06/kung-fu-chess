@@ -133,6 +133,15 @@ def solve(lines=None):
 
 
 
+        elif parts[0] == "jump":
+
+            controller.execute_command(
+                "jump",
+                parts[1:]
+            )
+
+
+
         elif parts[0] == "print":
 
             if len(parts) == 2 and parts[1] == "board":

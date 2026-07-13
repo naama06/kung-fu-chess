@@ -16,6 +16,26 @@ class Controller:
         elif command == "wait":
             self._handle_wait(args)
 
+        elif command == "jump":
+            self._handle_jump(args)
+
+    def _handle_jump(self, args):
+        if len(args) != 2:
+            return
+
+        try:
+            x = int(args[0])
+            y = int(args[1])
+        except ValueError:
+            return
+
+        position = self.mapper.pixel_to_position(x, y)
+
+        if position is None:
+            return
+
+        self.engine.handle_jump(position)
+
     def _handle_click(self, args):
         if len(args) != 2:
             return

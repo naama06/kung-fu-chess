@@ -1,4 +1,5 @@
 from model.position import Position
+from realtime.airborne_jump import AirborneJump
 from realtime.motion import Motion
 
 
@@ -10,6 +11,29 @@ class RealTimeArbiter:
     def __init__(self, board):
         self.board = board
         self.active_motions = []
+        self.airborne_jump = None
+
+    def has_active_motions(self):
+        return len(self.active_motions) > 0
+
+    def start_jump(self, position):
+        if self.has_active_motions():
+            return False
+
+        piece = self.board.get_piece(position)
+
+        if piece is None or piece.piece_type != "king":
+            return False
+
+        self.airborne_jump = AirborneJump(position, piece.color)
+        return True
+
+    def is_airborne_at(self, position):
+        return (
+            self.airborne_jump is not None
+            and self.airborne_jump.position == position
+            and not self.airborne_jump.is_complete()
+        )
 
     def can_start_motion(self, start, end):
         piece = self.board.get_piece(start)
@@ -54,7 +78,10 @@ class RealTimeArbiter:
         return True
 
     def advance(self, ms):
-        if not self.active_motions:
+        if self.airborne_jump is not None:
+            self.airborne_jump.elapsed_ms += ms
+
+        if not self.active_motions and self.airborne_jump is None:
             return []
 
         for motion in self.active_motions:
@@ -71,6 +98,9 @@ class RealTimeArbiter:
         captured_pieces = []
 
         for motion in completed:
+            if self._airborne_captures_attacker(motion):
+                continue
+
             captured = self.board.move_piece(motion.start, motion.end)
 
             if captured is not None:
@@ -82,7 +112,26 @@ class RealTimeArbiter:
             if not motion.is_complete()
         ]
 
+        if (
+            self.airborne_jump is not None
+            and self.airborne_jump.is_complete()
+        ):
+            self.airborne_jump = None
+
         return captured_pieces
+
+    def _airborne_captures_attacker(self, motion):
+        if self.airborne_jump is None:
+            return False
+
+        if self.airborne_jump.position != motion.end:
+            return False
+
+        if self.airborne_jump.color == motion.color:
+            return False
+
+        self.board.remove_piece(motion.start)
+        return True
 
     def is_piece_moving(self, position):
         for motion in self.active_motions:

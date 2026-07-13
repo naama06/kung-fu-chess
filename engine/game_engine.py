@@ -46,6 +46,12 @@ class GameEngine:
 
         self.arbiter.start_motion(start, end)
 
+    def handle_jump(self, position):
+        if self.game_state.is_game_over():
+            return
+
+        self.arbiter.start_jump(position)
+
     def advance_time(self, ms):
         captured_pieces = self.arbiter.advance(ms)
         self._check_king_captures(captured_pieces)
