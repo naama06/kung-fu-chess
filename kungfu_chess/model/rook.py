@@ -11,11 +11,32 @@ class Rook(Piece):
         return 'R'
 
     def is_valid_move(self, board, start_pos, end_pos):
+        # 1. אי אפשר להישאר באותו מקום
+        if start_pos == end_pos:
+            return False
+            
         row_diff = abs(start_pos.row - end_pos.row)
         col_diff = abs(start_pos.col - end_pos.col)
-        # צריח זז רק בקו ישר (שורה או עמודה)
+        
+        # 2. צריח זז רק בקו ישר (שורה או עמודה)
         is_straight = (row_diff == 0 and col_diff > 0) or (col_diff == 0 and row_diff > 0)
-        return is_straight
+        
+        if not is_straight:
+            return False
+            
+        # 3. בדיקה אם יש כלי בדרך (חסום)
+        # זה קריטי כדי שהצריח לא "יקפוץ" מעל כלים
+        step_r = 0 if row_diff == 0 else (end_pos.row - start_pos.row) // row_diff
+        step_c = 0 if col_diff == 0 else (end_pos.col - start_pos.col) // col_diff
+        
+        curr_r, curr_c = start_pos.row + step_r, start_pos.col + step_c
+        while (curr_r, curr_c) != (end_pos.row, end_pos.col):
+            if board.get_piece(Position(curr_r, curr_c)) is not None:
+                return False
+            curr_r += step_r
+            curr_c += step_c
+            
+        return True
 
     def get_possible_moves(self, board, position):
         moves = []
