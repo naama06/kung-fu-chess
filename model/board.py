@@ -17,6 +17,9 @@ class Board:
         return self._pieces.get(pos)
 
 
+    def remove_piece(self, pos):
+        self._pieces.pop(pos, None)
+
     def move_piece(self, start_pos, end_pos):
         piece = self._pieces.pop(start_pos, None)
 

@@ -6,6 +6,7 @@ from model.king import King
 from model.bishop import Bishop
 from model.knight import Knight
 from model.pawn import Pawn
+from model.queen import Queen
 
 
 class BoardParser:
@@ -53,6 +54,8 @@ class BoardParser:
                     piece = Knight(color)
                 elif piece_type == 'P':
                     piece = Pawn(color)
+                elif piece_type == 'Q':
+                    piece = Queen(color)
                 else:
                     continue
 

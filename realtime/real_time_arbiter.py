@@ -21,6 +21,14 @@ class RealTimeArbiter:
             if motion.color == piece.color:
                 return False
 
+            if self._is_head_on_collision(
+                motion.start,
+                motion.end,
+                start,
+                end,
+            ):
+                continue
+
             if self._has_common_route(
                 motion.start,
                 motion.end,
@@ -33,7 +41,7 @@ class RealTimeArbiter:
 
     def start_motion(self, start, end):
         if not self.can_start_motion(start, end):
-            return
+            return False
 
         piece = self.board.get_piece(start)
         distance = self._travel_distance(start, end, piece)
@@ -42,6 +50,8 @@ class RealTimeArbiter:
         self.active_motions.append(
             Motion(start, end, duration_ms, piece.color)
         )
+        self._resolve_head_on_collisions()
+        return True
 
     def advance(self, ms):
         if not self.active_motions:
@@ -49,6 +59,8 @@ class RealTimeArbiter:
 
         for motion in self.active_motions:
             motion.elapsed_ms += ms
+
+        self._resolve_head_on_collisions()
 
         completed = [
             motion
@@ -65,6 +77,63 @@ class RealTimeArbiter:
             if not motion.is_complete()
         ]
 
+    def is_piece_moving(self, position):
+        for motion in self.active_motions:
+            if motion.start == position:
+                return True
+
+        return False
+
+    def get_motion_at(self, position):
+        for motion in self.active_motions:
+            if motion.start == position:
+                return motion
+
+        return None
+
+    def _resolve_head_on_collisions(self):
+        to_remove = set()
+
+        for index, first_motion in enumerate(self.active_motions):
+            if first_motion in to_remove:
+                continue
+
+            for second_motion in self.active_motions[index + 1:]:
+                if second_motion in to_remove:
+                    continue
+
+                if first_motion.color == second_motion.color:
+                    continue
+
+                if not self._is_head_on_collision(
+                    first_motion.start,
+                    first_motion.end,
+                    second_motion.start,
+                    second_motion.end,
+                ):
+                    continue
+
+                winner, loser = self._earlier_motion(
+                    first_motion,
+                    second_motion,
+                )
+
+                self.board.remove_piece(loser.start)
+                to_remove.add(loser)
+
+        if to_remove:
+            self.active_motions = [
+                motion
+                for motion in self.active_motions
+                if motion not in to_remove
+            ]
+
+    def _earlier_motion(self, motion1, motion2):
+        if motion1.order <= motion2.order:
+            return motion1, motion2
+
+        return motion2, motion1
+
     def _travel_distance(self, start, end, piece):
         row_diff = abs(end.row - start.row)
         col_diff = abs(end.col - start.col)
@@ -73,6 +142,35 @@ class RealTimeArbiter:
             return row_diff + col_diff
 
         return max(row_diff, col_diff)
+
+    def _is_head_on_collision(self, start1, end1, start2, end2):
+        if start1.row == end1.row == start2.row == end2.row:
+            cols1 = self._column_range(start1, end1)
+            cols2 = self._column_range(start2, end2)
+
+            if not (cols1 & cols2):
+                return False
+
+            if start1.col < end1.col and start2.col > end2.col:
+                return True
+
+            if start1.col > end1.col and start2.col < end2.col:
+                return True
+
+        if start1.col == end1.col == start2.col == end2.col:
+            rows1 = self._row_range(start1, end1)
+            rows2 = self._row_range(start2, end2)
+
+            if not (rows1 & rows2):
+                return False
+
+            if start1.row < end1.row and start2.row > end2.row:
+                return True
+
+            if start1.row > end1.row and start2.row < end2.row:
+                return True
+
+        return False
 
     def _has_common_route(self, start1, end1, start2, end2):
         cells1 = self._path_cells(start1, end1)
@@ -100,6 +198,9 @@ class RealTimeArbiter:
             return True
 
         return False
+
+    def has_common_route(self, start1, end1, start2, end2):
+        return self._has_common_route(start1, end1, start2, end2)
 
     def _path_cells(self, start, end):
         cells = set()
