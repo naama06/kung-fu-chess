@@ -55,7 +55,7 @@ class RealTimeArbiter:
 
     def advance(self, ms):
         if not self.active_motions:
-            return
+            return []
 
         for motion in self.active_motions:
             motion.elapsed_ms += ms
@@ -68,14 +68,21 @@ class RealTimeArbiter:
             if motion.is_complete()
         ]
 
+        captured_pieces = []
+
         for motion in completed:
-            self.board.move_piece(motion.start, motion.end)
+            captured = self.board.move_piece(motion.start, motion.end)
+
+            if captured is not None:
+                captured_pieces.append(captured)
 
         self.active_motions = [
             motion
             for motion in self.active_motions
             if not motion.is_complete()
         ]
+
+        return captured_pieces
 
     def is_piece_moving(self, position):
         for motion in self.active_motions:

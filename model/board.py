@@ -21,11 +21,13 @@ class Board:
         self._pieces.pop(pos, None)
 
     def move_piece(self, start_pos, end_pos):
+        captured = self._pieces.get(end_pos)
         piece = self._pieces.pop(start_pos, None)
 
         if piece:
-            # אם יש כלי יריב במקום החדש הוא נדרס (אכילה)
             self._pieces[end_pos] = piece
+
+        return captured
 
 
     def __str__(self):

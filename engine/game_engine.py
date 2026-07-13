@@ -1,4 +1,5 @@
 from engine.rule_engine import RuleEngine
+from model.game_state import GameState
 from realtime.real_time_arbiter import RealTimeArbiter
 
 
@@ -8,10 +9,14 @@ class GameEngine:
         self.board = board
         self.rule_engine = RuleEngine()
         self.arbiter = RealTimeArbiter(board)
+        self.game_state = GameState()
         self.first_click = None
         self.premove = None
 
     def handle_click(self, position):
+        if self.game_state.is_game_over():
+            return
+
         if self.first_click is None:
             self._select_piece(position)
             return
@@ -33,14 +38,29 @@ class GameEngine:
         self.first_click = None
 
     def request_move(self, start, end):
+        if self.game_state.is_game_over():
+            return
+
         if not self.rule_engine.is_move_allowed(self.board, start, end):
             return
 
         self.arbiter.start_motion(start, end)
 
     def advance_time(self, ms):
-        self.arbiter.advance(ms)
+        captured_pieces = self.arbiter.advance(ms)
+        self._check_king_captures(captured_pieces)
+
+        if self.game_state.is_game_over():
+            self.premove = None
+            self.first_click = None
+            return
+
         self._try_execute_premove()
+
+    def _check_king_captures(self, captured_pieces):
+        for piece in captured_pieces:
+            if piece.piece_type == "king":
+                self.game_state.mark_game_over()
 
     def _try_execute_premove(self):
         if self.premove is None:
