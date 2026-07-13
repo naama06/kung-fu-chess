@@ -14,7 +14,7 @@ class Controller:
             self._handle_click(args)
 
         elif command == "wait":
-            pass
+            self._handle_wait(args)
 
     def _handle_click(self, args):
         if len(args) != 2:
@@ -32,3 +32,14 @@ class Controller:
             return
 
         self.engine.handle_click(position)
+
+    def _handle_wait(self, args):
+        if len(args) != 1:
+            return
+
+        try:
+            ms = int(args[0])
+        except ValueError:
+            return
+
+        self.engine.advance_time(ms)
