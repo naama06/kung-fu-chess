@@ -11,9 +11,6 @@ class GameEngine:
         self.first_click = None
 
     def handle_click(self, position):
-        if self.arbiter.has_active_motion():
-            return
-
         if self.first_click is None:
             self._select_piece(position)
             return
@@ -29,9 +26,6 @@ class GameEngine:
         self.first_click = None
 
     def request_move(self, start, end):
-        if self.arbiter.has_active_motion():
-            return
-
         if not self.rule_engine.is_move_allowed(self.board, start, end):
             return
 
