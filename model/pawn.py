@@ -1,4 +1,5 @@
 from model.piece import Piece
+from model.position import Position
 
 
 class Pawn(Piece):
@@ -21,12 +22,28 @@ class Pawn(Piece):
 
         target = board.get_piece(end_pos)
 
-        # צעד קדימה אחד — רק למשבצת ריקה
         if col_diff == 0 and row_diff == direction:
             return target is None
 
-        # אכילה באלכסון קדימה — רק אם יש יריב
+        if (
+            col_diff == 0
+            and row_diff == 2 * direction
+            and self._is_start_row(board, start_pos.row)
+        ):
+            if target is not None:
+                return False
+
+            middle = Position(start_pos.row + direction, start_pos.col)
+
+            return board.get_piece(middle) is None
+
         if abs(col_diff) == 1 and row_diff == direction:
             return target is not None and target.color != self.color
 
         return False
+
+    def _is_start_row(self, board, row):
+        if self.color == "white":
+            return row == board.height - 1
+
+        return row == 0

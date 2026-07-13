@@ -1,4 +1,5 @@
 from model.position import Position
+from model.queen import Queen
 
 
 class Board:
@@ -26,8 +27,19 @@ class Board:
 
         if piece:
             self._pieces[end_pos] = piece
+            self._promote_pawn_if_needed(piece, end_pos)
 
         return captured
+
+    def _promote_pawn_if_needed(self, piece, end_pos):
+        if piece.piece_type != "pawn":
+            return
+
+        if piece.color == "white" and end_pos.row == 0:
+            self._pieces[end_pos] = Queen("white")
+
+        elif piece.color == "black" and end_pos.row == self.height - 1:
+            self._pieces[end_pos] = Queen("black")
 
 
     def __str__(self):
