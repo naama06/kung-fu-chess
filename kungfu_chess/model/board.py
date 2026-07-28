@@ -1,4 +1,5 @@
 from model.position import Position
+from model.queen import Queen
 
 
 class Board:
@@ -17,12 +18,28 @@ class Board:
         return self._pieces.get(pos)
 
 
+    def remove_piece(self, pos):
+        self._pieces.pop(pos, None)
+
     def move_piece(self, start_pos, end_pos):
+        captured = self._pieces.get(end_pos)
         piece = self._pieces.pop(start_pos, None)
 
         if piece:
-            # אם יש כלי יריב במקום החדש הוא נדרס (אכילה)
             self._pieces[end_pos] = piece
+            self._promote_pawn_if_needed(piece, end_pos)
+
+        return captured
+
+    def _promote_pawn_if_needed(self, piece, end_pos):
+        if piece.piece_type != "pawn":
+            return
+
+        if piece.color == "white" and end_pos.row == 0:
+            self._pieces[end_pos] = Queen("white")
+
+        elif piece.color == "black" and end_pos.row == self.height - 1:
+            self._pieces[end_pos] = Queen("black")
 
 
     def __str__(self):

@@ -44,6 +44,6 @@ class Pawn(Piece):
 
     def _is_start_row(self, board, row):
         if self.color == "white":
-            return row == board.height - 1
+            return row == board.height - 2
 
-        return row == 0
+        return row == 1
